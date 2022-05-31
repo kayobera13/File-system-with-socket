@@ -120,9 +120,23 @@ void removeSubstr (char *string, char *sub) {
 					}
 					else if(STRECOM(recvbuf, "DEL", strlen("DEL")))
 					{
-					   
-					   sprintf(bufferout,"200 ,Hello %s , please to meet you\n", "DEL");//
-						send(fd, bufferout, strlen(bufferout), 0);
+						sprintf(filename,"%s",recvbuf);
+						removeSubstr(filename, "DEL");//remove DEL
+						removeSubstr(filename, " ");
+						removeSubstr(filename, "\n");//remove space
+
+						sprintf(folderfilename,"%s/%s", folder, filename);
+						
+					    if (remove(folderfilename) == 0) {
+							printf("The file is deleted successfully.");
+							sprintf(bufferout,"200 %s , deleted\n", filename);//
+							send(fd, bufferout, strlen(bufferout), 0);
+						} else {
+							printf("The file is not deleted.");
+							sprintf(bufferout,"404 File %s is not on the server\n", filename);//
+							send(fd, bufferout, strlen(bufferout), 0);
+						}
+
 					}
 					else if(STRECOM(recvbuf, "QUIT", strlen("QUIT")))
 					{
