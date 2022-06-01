@@ -35,7 +35,7 @@ void removeSubstr (char *string, char *sub) {
 	char recvbuf[DEFAULT_BUFLEN],bmsg[DEFAULT_BUFLEN];
 	int  recvbuflen = DEFAULT_BUFLEN;
 	int rcnt;
-	char filename[100] ;
+	char filename[100], username[100] ;
 	char folderfilename[300],  thetext[BUF_SIZE] ;
 	 FILE *ofp;
 	 int infile=0;
@@ -45,6 +45,11 @@ void removeSubstr (char *string, char *sub) {
         memset( &recvbuf, '\0', sizeof(recvbuf) );
         rcnt = recv(fd, recvbuf, recvbuflen, 0);
         if (rcnt > 0) {
+			if(STRECOM(recvbuf, "QUIT", strlen("QUIT")))
+			{
+				send(fd, "Goodbye!\n", strlen("Goodbye!\n"), 0);
+                 close(fd);	
+			}
 			
 			if(logged==1){
 				if(infile == 0){
@@ -66,7 +71,6 @@ void removeSubstr (char *string, char *sub) {
 					}
 					else if(STRECOM(recvbuf, "GET", strlen("GET")))
 					{
-						
 						sprintf(filename,"%s",recvbuf);
 						removeSubstr(filename, "GET");//remove GET
 						removeSubstr(filename, " ");
@@ -80,12 +84,11 @@ void removeSubstr (char *string, char *sub) {
 						ofp = fopen(folderfilename, "r");
 					 
 						if (NULL == ofp) {
-							printf("file can't be opened \n");
+							printf("file can't be opened\n");
 							sprintf(bufferout,"404 File %s not found\n", filename);//
 							send(fd, bufferout, strlen(bufferout), 0);
-							
+
 						}else{
-							printf("file caN be opened \n");
 							
 							do {
 								ch = fgetc(ofp);
@@ -115,7 +118,7 @@ void removeSubstr (char *string, char *sub) {
 						sprintf(folderfilename,"%s/%s", folder, filename);
 						infile=1;
 						
-						sprintf(bufferout,"200 ,Hello %s , please to meet you\n", "PUT");//
+						sprintf(bufferout,"200 %S file retrieved by server and was saved.\n", filename);//
 						send(fd, bufferout, strlen(bufferout), 0);
 					}
 					else if(STRECOM(recvbuf, "DEL", strlen("DEL")))
@@ -138,12 +141,6 @@ void removeSubstr (char *string, char *sub) {
 						}
 
 					}
-					else if(STRECOM(recvbuf, "QUIT", strlen("QUIT")))
-					{
-						send(fd, "Goodbye!\n", strlen("Goodbye!\n"), 0);
-                        close(fd);
-					
-					}
 					else
 					{  
 						send(fd, "Wrong command please start your text with: LIST, GET, DEL or QUIT\n", strlen( "Wrong command please start your text with: LIST, GET, DEL or QUIT\n"), 0);
@@ -159,11 +156,49 @@ void removeSubstr (char *string, char *sub) {
                     }
 				}
 				
-			}else{
+			}else{					
 				if (STRECOM(recvbuf, "USER", strlen("USER"))) { // Initial greeting
-					sprintf(bufferout,"200 ,Hello %s , please to meet you\n", "USER");//
-					send(fd, bufferout, strlen(bufferout), 0);
-					logged=1;
+					sprintf(username,"%s",recvbuf);
+					removeSubstr(username, "USER");//remove GET
+					//removeSubstr(username, " ");
+					removeSubstr(username, "\n");//remove space
+					char *result = username+1;
+					printf("%s\n",result);
+					
+					//USER testtest123
+					char *delim = " ";
+					char *user = strtok(result,delim);  //username Provide by client
+					char *password = strtok(NULL,delim);  //password Provide by client
+					printf("%s\n", user);
+					printf("%s\n", password);
+					
+					FILE* fileLogin;
+					int bufferLength = 255;
+					char bufferLogin[bufferLength]; /* not ISO 90 compatible */
+
+					fileLogin = fopen("password.txt", "r");
+
+					while(fgets(bufferLogin, bufferLength, fileLogin)) {
+						printf("%s\n", bufferLogin);
+						delim = ":";
+						char *userFile =strtok(bufferLogin,delim);  //username got from password file
+						char *passwordFile =strtok(NULL,delim);		 //password got from password file
+						
+						printf("User: %s   --- Password=%s",userFile, passwordFile);
+						
+						if (STRECOM(user, userFile, strlen(userFile)) && STRECOM(password, passwordFile, strlen(passwordFile)-2)) {
+							logged=1;
+							sprintf(bufferout,"200 User %s granted to access\n", user);//
+							send(fd, bufferout, strlen(bufferout), 0);
+						}
+					}
+
+					fclose(fileLogin);
+		
+					if (logged ==0){
+						sprintf(bufferout,"400 User not found. Please try with another user\n");//
+						send(fd, bufferout, strlen(bufferout), 0);
+					}
 				}
 				else{
 					send(fd, "the syntax is USER follow by your name space and passwork 'USER test password' \n", 
