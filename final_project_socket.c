@@ -66,8 +66,7 @@ void removeSubstr (char *string, char *sub) {
 							}
 							closedir(d);
 						  }
-						//sprintf(bufferout,"200 ,Hello %s , please to meet you\n", "LIST");//
-						send(fd, bufferout, strlen(bufferout), 0);
+						
 					}
 					else if(STRECOM(recvbuf, "GET", strlen("GET")))
 					{
@@ -77,14 +76,13 @@ void removeSubstr (char *string, char *sub) {
 						removeSubstr(filename, "\n");//remove space
 
 						sprintf(folderfilename,"%s/%s", folder, filename);
-						//sprintf(bufferout,"200 ,Hello %s , please to meet you\n", "GET");//
-						//send(fd, bufferout, strlen(bufferout), 0);
+						
 						char ch;
 						char chr[3];
 						ofp = fopen(folderfilename, "r");
 					 
 						if (NULL == ofp) {
-							printf("file can't be opened\n");
+							//printf("file can't be opened\n");
 							sprintf(bufferout,"404 File %s not found\n", filename);//
 							send(fd, bufferout, strlen(bufferout), 0);
 
@@ -95,7 +93,7 @@ void removeSubstr (char *string, char *sub) {
 								sprintf(chr,"%c", ch);//
 								send(fd, chr, strlen(chr), 0);
 
-								printf("%c", ch);
+								//printf("%c", ch);
 							} while (ch != EOF);
 							
 							sprintf(chr,"\n");//
@@ -160,17 +158,13 @@ void removeSubstr (char *string, char *sub) {
 				if (STRECOM(recvbuf, "USER", strlen("USER"))) { // Initial greeting
 					sprintf(username,"%s",recvbuf);
 					removeSubstr(username, "USER");//remove GET
-					//removeSubstr(username, " ");
 					removeSubstr(username, "\n");//remove space
 					char *result = username+1;
-					printf("%s\n",result);
 					
-					//USER testtest123
 					char *delim = " ";
 					char *user = strtok(result,delim);  //username Provide by client
 					char *password = strtok(NULL,delim);  //password Provide by client
-					printf("%s\n", user);
-					printf("%s\n", password);
+
 					
 					FILE* fileLogin;
 					int bufferLength = 255;
@@ -183,9 +177,7 @@ void removeSubstr (char *string, char *sub) {
 						delim = ":";
 						char *userFile =strtok(bufferLogin,delim);  //username got from password file
 						char *passwordFile =strtok(NULL,delim);		 //password got from password file
-						
-						printf("User: %s   --- Password=%s",userFile, passwordFile);
-						
+												
 						if (STRECOM(user, userFile, strlen(userFile)) && STRECOM(password, passwordFile, strlen(passwordFile)-2)) {
 							logged=1;
 							sprintf(bufferout,"200 User %s granted to access\n", user);//
