@@ -17,7 +17,7 @@
 
 
 
-void system_execution(int fd, char* folder){
+void system_execution(int fd, char* folder, char* passwordfile){
 	#define STRECOM(a,b, c)     (strncmp(a, b, c) == 0)
 	#define BUF_SIZE        4096
 
@@ -170,7 +170,7 @@ void removeSubstr (char *string, char *sub) {
 					int bufferLength = 255;
 					char bufferLogin[bufferLength]; /* not ISO 90 compatible */
 
-					fileLogin = fopen("password.txt", "r");
+					fileLogin = fopen(passwordfile, "r");
 
 					while(fgets(bufferLogin, bufferLength, fileLogin)) {
 						printf("%s\n", bufferLogin);
@@ -304,7 +304,7 @@ while(1) {  // main accept() loop
  
 	if ((pid=fork()) == 0) {
 			close(server);
-			system_execution(fd, folder);
+			system_execution(fd, folder, password);
 			printf("Child finished their job!\n");
 			close(fd);
 			exit(0);
